@@ -1,6 +1,8 @@
 import controlerUserLogin from "./moduloControlerLogin.js";
 import controleRotasApp from "./moduloControleRotas.js";
-import ajudaDados from "./moduloAjudaDados.js";
+import controllerMenuAjuda from "./moduloControllerAjuda.js";
+
+
 
 //Trazendo elementos do Bootstrap para uso da main Javascript.
 const myModal = new bootstrap.Modal(document.getElementById("myModal"));
@@ -34,22 +36,5 @@ novoUsuario.addEventListener("click", (event) => {
     );
 });
 
-document.querySelector("#btnAjuda").addEventListener("click", (event) => {
-    const myModalBody = document.querySelector("#bodyModal");
-    myModalBody.innerHTML = `<ul>`;
-    ajudaDados.forEach((element,index) => {
-        
-        myModalBody.innerHTML += `
-        <li 
-            class="list-group-item list-group-item-action"
-            onclick='console.log(this.value)' 
-            value="${"error" + index.toString()}">
-                ${element.title}
-        </li>`;
-    });
-
-    myModalBody.innerHTML += `</ul>`;
-    // myModalBody.innerHTML = 'Teste'
-
-    myModal.show();
-});
+// Criando submenu de ajuda.
+controllerMenuAjuda.construirSubMenuAjuda
