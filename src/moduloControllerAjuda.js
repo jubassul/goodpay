@@ -12,7 +12,7 @@ class ControllerMenuAjuda {
             subMenuBody.innerHTML += `
             <li 
                 class="btn list-group-item list-group-item-action"
-                value="10${index + 1}" data-bs-dismiss="offcanvas">
+                value="10${index + 1}${index + 1}" data-bs-dismiss="offcanvas">
                     ${element.idTitle}
             </li>`;
         });
@@ -36,7 +36,20 @@ class ControllerMenuAjuda {
         const modalTitle = document.getElementById("titleModal");
         modalTitle.innerHTML = `${dadosErro.idTitle}`;
         const modalBody = document.getElementById("bodyModal");
-        modalBody.innerHTML = `<p>${dadosErro.desc}</p><p>${dadosErro.msg}</p>`;
+        modalBody.innerHTML = `<p>${dadosErro.desc}</p>
+        <p>${dadosErro.msg}</p>
+        <form class="d-flex justify-content-evenly align-items-center form-control">
+            <span>A informação foi util? </span>
+            <div class="form-check">
+                <label for="radioSim">Sim</label>
+                <input type="radio" id='radioSim' name="radioResposta" value="sim" checked>
+            </div>
+            <div class="form-check">
+                <label for="radioNao">Não</label>
+                <input type="radio" id='radioNao' name="radioResposta" value="nao">
+            </div>
+        </form>
+        `;
 
         document.getElementById("modalButtonArea").innerHTML = `
         <button
@@ -48,7 +61,12 @@ class ControllerMenuAjuda {
             type="button" 
             class="btn btn-secondary" 
             data-bs-dismiss="modal">Fechar</button>
-        <button id="btnModalSave" type="button" class="btn btn-primary" data-bs-dismiss="modal">Salvar e Fechar</button>
+        <button 
+            id="btnModalSave" 
+            type="button" 
+            class="btn btn-primary" 
+            data-bs-dismiss="modal"
+            value="${value}">Salvar e Fechar</button>
         `;
 
         // Modal Geral de erros
@@ -59,21 +77,12 @@ class ControllerMenuAjuda {
                 <input 
                     id="buscaErro"
                     class="form-control text-center" 
-                    type="text" 
+                    type="text"
+                    autoComplete="off" 
                     placeholder="Busque pelo erro desejado...">
-            <ul id="listaDeErros">`;
+            <ul id="listaDeErros" class="list-group-item list-group-item-action"></ul>`;
             // filtro de lista de erros
             this.buscarErro();
-            // lista de erros
-            /* ajudaDados.forEach((element, index) => {
-                modalBody.innerHTML += `
-                <li
-                class="btn list-group-item list-group-item-action"
-                value="10${index + 1}">
-                ${element.idTitle}
-                </li>`;
-            });
-            modalBody.innerHTML += `</ul>`; */
 
             // BOTÃO FECHAR MODAL
             document.getElementById("modalButtonArea").innerHTML = `
@@ -85,6 +94,53 @@ class ControllerMenuAjuda {
             `;
         });
         this.modalBase().show();
+
+        // BOTÃO SALVAR INFO
+        document
+            .getElementById("btnModalSave")
+            .addEventListener("click", (event) => {
+                const issue = {
+                    id: event.target.value,
+                    sim:0,
+                    nao:0
+                }
+                this.getLocalStorage("listaUtil") || this.setLocalStorage("listaUtil", [])
+                const listaUtil = this.getLocalStorage("listaUtil");
+
+                const radio = document.querySelector(
+                    'input[name="radioResposta"]:checked'
+                ).value;
+                
+                const listaFiltrada = listaUtil?.filter( item => {
+                    return item.id === event.target.value;
+                });
+
+                
+                
+
+                
+                if (listaFiltrada.length > 0) {
+                    listaUtil.map((element) => {
+                        console.log("if SOBRESCREVER");
+                        if (element.id === event.target.value) {
+                            if (radio === "sim") {
+                                element.sim++;
+                            } else {
+                                element.nao++;
+                            }
+                        }
+                    });
+                } else {
+                    console.log("if CRIAR");
+                    if (radio === "sim") {
+                        issue.sim++;
+                    } else {
+                        issue.nao++;
+                    }
+                    listaUtil?.push(issue);
+                }
+                this.setLocalStorage("listaUtil", listaUtil);
+            });
     }
 
     //todo: criar um método para chamar o modal geral.
@@ -94,40 +150,59 @@ class ControllerMenuAjuda {
 
     buscarErro() {
         const inputBusca = document.getElementById("buscaErro");
-        const modalBody = document.getElementById("bodyModal");
+        const ul = document.getElementById("listaDeErros");
+        // PRIMEIRA MONTAGEM
         ajudaDados.forEach((element, index) => {
-            modalBody.innerHTML += `
+            ul.innerHTML += `
                 <li
                 class="btn list-group-item list-group-item-action"
-                value="10${index + 1}">
-                ${element.idTitle}
+                data-bs-dismiss="modal"
+                value="10${index + 1}${index + 1}">
+                ${element.idTitle} - ${element.title}
                 </li>`;
         });
-        modalBody.innerHTML += `</ul>`;
-        const ul = document.getElementById("listaDeErros");
-        document
-            .querySelector("#buscaErro")
-            .addEventListener("keydown", (e) => {
-                console.log(inputBusca.value);
-                if (inputBusca.value !== "" || inputBusca.value.length + 1 >= 2) {
-                    const novaLista = ajudaDados.filter((item) => {
-                        return item
-                            .toLocaleLowerCase()
-                            .includes(inputBusca.value.toLocaleLowerCase());
-                    });
-                    ul.innerHTML = ``;
-                    novaLista.forEach((item) => {
-                        ul.innerHTML += `<li>${item}</li>`;
-                    });
-                    // modalBody.innerHTML += `</ul>`;
-                } else {
-                    ul.innerHTML = ``;
-                    ajudaDados.forEach((item) => {
-                        ul.innerHTML += `<li>${item}</li>`;
-                    });
-                    // modalBody.innerHTML += `</ul>`;
-                }
+
+        inputBusca.addEventListener("keydown", (e) => {
+            const novaLista = ajudaDados.filter((item) => {
+                return item
+                    .idBusca()
+                    .toLocaleLowerCase()
+                    .includes(inputBusca.value.toLocaleLowerCase());
             });
+            // MONTAGEM CONDICIONAL
+            if (inputBusca.value === "" || inputBusca.value.length + 1 <= 2) {
+                ul.innerHTML = ``;
+                ajudaDados.forEach((item, index) => {
+                    ul.innerHTML += `<li
+                        class="btn list-group-item list-group-item-action"
+                        data-bs-dismiss="modal"
+                        value="10${index + 1}${index + 1}">
+                        ${item.idTitle} - ${item.title}
+                        </li>`;
+                });
+            } else {
+                ul.innerHTML = ``;
+                novaLista.forEach((item, index) => {
+                    ul.innerHTML += `<li
+                        class="btn list-group-item list-group-item-action"
+                        data-bs-dismiss="modal"
+                        value="10${index + 1}${index + 1}"> 
+                        ${item.idTitle} - ${item.title}
+                        </li>`;
+                });
+            }
+        });
+        // MONTAGEM ESPECIFICA
+        ul.addEventListener("click", (e) => {
+            console.log("clicou", e.target.value);
+            this.montarModalEspecifico(e.target.value);
+        });
+    }
+    getLocalStorage(storageName) {
+        return JSON.parse(localStorage.getItem(storageName));
+    }
+    setLocalStorage(storageName,data) {
+        localStorage.setItem(storageName, JSON.stringify(data));
     }
 }
 
