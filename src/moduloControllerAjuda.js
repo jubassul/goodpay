@@ -4,7 +4,7 @@ class ControllerMenuAjuda {
     constructor(ajudaDados) {
         this.ajudaDados = ajudaDados;
     }
-    // Constrói o submenu de ajuda.
+    // MÉTODO PARA MONTAR O MONTAGEM DO SUBMENU
     get construirSubMenuAjuda() {
         const subMenuBody = document.querySelector("#subMenuAjuda");
         subMenuBody.innerHTML = `<ul>`;
@@ -29,10 +29,17 @@ class ControllerMenuAjuda {
     }
     // monta o modal específico para cada item do submenu.
     montarModalEspecifico(value) {
+        // INFORMAÇÕES ESPECIFICAS DOS ERROS
         const dadosErro = ajudaDados.find(
             (element) => element.id.toString() === value.toString()
         );
 
+        // CHECAGEM E CHAMADA NUMERO DE VOTOS
+        const status = this.getLocalStorage("listaUtil");
+        console.log(status);
+        const gpErro = status?.find((status) => status.id == value);
+        console.log("gp ->", gpErro) || null;
+        // CRIAÇÃO DO MODAL
         const modalTitle = document.getElementById("titleModal");
         modalTitle.innerHTML = `${dadosErro.idTitle}`;
         const modalBody = document.getElementById("bodyModal");
@@ -40,17 +47,18 @@ class ControllerMenuAjuda {
         <p>${dadosErro.msg}</p>
         <form class="d-flex justify-content-evenly align-items-center form-control">
             <span>A informação foi util? </span>
-            <div class="form-check">
-                <label for="radioSim">Sim</label>
-                <input type="radio" id='radioSim' name="radioResposta" value="sim" checked>
+            <div class="form-check d-flex align-items-center">
+                <label for="radioSim">Sim </label>
+                <input class="ms-2" type="radio" id='radioSim' name="radioResposta" value="sim" checked>
+                <span class="ms-2">${gpErro?.sim || "0"} votos</span>
             </div>
-            <div class="form-check">
+            <div class="form-check d-flex align-items-center">
                 <label for="radioNao">Não</label>
-                <input type="radio" id='radioNao' name="radioResposta" value="nao">
+                <input class="ms-2" type="radio" id='radioNao' name="radioResposta" value="nao">
+                <span class="ms-2">${gpErro?.nao || "0"} votos</span>
             </div>
         </form>
         `;
-
         document.getElementById("modalButtonArea").innerHTML = `
         <button
             id='btnVoltar' 
@@ -68,7 +76,6 @@ class ControllerMenuAjuda {
             data-bs-dismiss="modal"
             value="${value}">Salvar e Fechar</button>
         `;
-
         // Modal Geral de erros
         const btnVoltar = document.getElementById("btnVoltar");
         btnVoltar.addEventListener("click", (event) => {
@@ -81,9 +88,8 @@ class ControllerMenuAjuda {
                     autoComplete="off" 
                     placeholder="Busque pelo erro desejado...">
             <ul id="listaDeErros" class="list-group-item list-group-item-action"></ul>`;
-            // filtro de lista de erros
+            // CHAMADA FILTRO DE LISTA DE ERROS
             this.buscarErro();
-
             // BOTÃO FECHAR MODAL
             document.getElementById("modalButtonArea").innerHTML = `
             <button 
@@ -94,31 +100,27 @@ class ControllerMenuAjuda {
             `;
         });
         this.modalBase().show();
-
         // BOTÃO SALVAR INFO
         document
             .getElementById("btnModalSave")
             .addEventListener("click", (event) => {
                 const issue = {
                     id: event.target.value,
-                    sim:0,
-                    nao:0
-                }
-                this.getLocalStorage("listaUtil") || this.setLocalStorage("listaUtil", [])
+                    sim: 0,
+                    nao: 0,
+                };
+                this.getLocalStorage("listaUtil") ||
+                    this.setLocalStorage("listaUtil", []);
                 const listaUtil = this.getLocalStorage("listaUtil");
 
                 const radio = document.querySelector(
                     'input[name="radioResposta"]:checked'
                 ).value;
-                
-                const listaFiltrada = listaUtil?.filter( item => {
+
+                const listaFiltrada = listaUtil?.filter((item) => {
                     return item.id === event.target.value;
                 });
 
-                
-                
-
-                
                 if (listaFiltrada.length > 0) {
                     listaUtil.map((element) => {
                         console.log("if SOBRESCREVER");
@@ -144,10 +146,10 @@ class ControllerMenuAjuda {
     }
 
     //todo: criar um método para chamar o modal geral.
-    montarModalGeral() {
+    /* montarModalGeral() {
         console.log("montarModalGeral");
-    }
-
+    } */
+    // BUSCA DE ERROS PELO INPUT (BUSCA ID, IDTITLE E DESC)
     buscarErro() {
         const inputBusca = document.getElementById("buscaErro");
         const ul = document.getElementById("listaDeErros");
@@ -161,7 +163,7 @@ class ControllerMenuAjuda {
                 ${element.idTitle} - ${element.title}
                 </li>`;
         });
-
+        // EVENTO LISTENER DO INPUT
         inputBusca.addEventListener("keydown", (e) => {
             const novaLista = ajudaDados.filter((item) => {
                 return item
@@ -192,16 +194,18 @@ class ControllerMenuAjuda {
                 });
             }
         });
-        // MONTAGEM ESPECIFICA
+        // CHAMADA DA MONTAGEM ESPECIFICA
         ul.addEventListener("click", (e) => {
             console.log("clicou", e.target.value);
             this.montarModalEspecifico(e.target.value);
         });
     }
+    // MÉTODO PARA RECUPERAR DO LOCALSTORAGE
     getLocalStorage(storageName) {
         return JSON.parse(localStorage.getItem(storageName));
     }
-    setLocalStorage(storageName,data) {
+    // MÉTODO PARA GRAVAR NO LOCALSTORAGE
+    setLocalStorage(storageName, data) {
         localStorage.setItem(storageName, JSON.stringify(data));
     }
 }
